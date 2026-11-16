@@ -1,0 +1,555 @@
+﻿[
+    {
+        "table_name":  "diary_entries",
+        "column_name":  "id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  "gen_random_uuid()"
+    },
+    {
+        "table_name":  "diary_entries",
+        "column_name":  "trip_id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "diary_entries",
+        "column_name":  "user_id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  "auth.uid()"
+    },
+    {
+        "table_name":  "diary_entries",
+        "column_name":  "location_id",
+        "data_type":  "uuid",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "diary_entries",
+        "column_name":  "title",
+        "data_type":  "text",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "diary_entries",
+        "column_name":  "content",
+        "data_type":  "text",
+        "is_nullable":  "NO",
+        "column_default":  "\u0027\u0027::text"
+    },
+    {
+        "table_name":  "diary_entries",
+        "column_name":  "entry_date",
+        "data_type":  "date",
+        "is_nullable":  "NO",
+        "column_default":  "CURRENT_DATE"
+    },
+    {
+        "table_name":  "diary_entries",
+        "column_name":  "created_at",
+        "data_type":  "timestamp with time zone",
+        "is_nullable":  "NO",
+        "column_default":  "now()"
+    },
+    {
+        "table_name":  "diary_entries",
+        "column_name":  "updated_at",
+        "data_type":  "timestamp with time zone",
+        "is_nullable":  "NO",
+        "column_default":  "now()"
+    },
+    {
+        "table_name":  "diary_photos",
+        "column_name":  "id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  "gen_random_uuid()"
+    },
+    {
+        "table_name":  "diary_photos",
+        "column_name":  "entry_id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "diary_photos",
+        "column_name":  "user_id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  "auth.uid()"
+    },
+    {
+        "table_name":  "diary_photos",
+        "column_name":  "storage_path",
+        "data_type":  "text",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "diary_photos",
+        "column_name":  "sort_order",
+        "data_type":  "integer",
+        "is_nullable":  "NO",
+        "column_default":  "0"
+    },
+    {
+        "table_name":  "diary_photos",
+        "column_name":  "created_at",
+        "data_type":  "timestamp with time zone",
+        "is_nullable":  "NO",
+        "column_default":  "now()"
+    },
+    {
+        "table_name":  "expenses",
+        "column_name":  "id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  "gen_random_uuid()"
+    },
+    {
+        "table_name":  "expenses",
+        "column_name":  "trip_id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "expenses",
+        "column_name":  "user_id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  "auth.uid()"
+    },
+    {
+        "table_name":  "expenses",
+        "column_name":  "title",
+        "data_type":  "text",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "expenses",
+        "column_name":  "amount",
+        "data_type":  "numeric",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "expenses",
+        "column_name":  "category",
+        "data_type":  "text",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "expenses",
+        "column_name":  "expense_date",
+        "data_type":  "date",
+        "is_nullable":  "NO",
+        "column_default":  "CURRENT_DATE"
+    },
+    {
+        "table_name":  "expenses",
+        "column_name":  "created_at",
+        "data_type":  "timestamp with time zone",
+        "is_nullable":  "NO",
+        "column_default":  "now()"
+    },
+    {
+        "table_name":  "expenses",
+        "column_name":  "updated_at",
+        "data_type":  "timestamp with time zone",
+        "is_nullable":  "NO",
+        "column_default":  "now()"
+    },
+    {
+        "table_name":  "locations",
+        "column_name":  "id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  "gen_random_uuid()"
+    },
+    {
+        "table_name":  "locations",
+        "column_name":  "user_id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "locations",
+        "column_name":  "name",
+        "data_type":  "text",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "locations",
+        "column_name":  "city",
+        "data_type":  "text",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "locations",
+        "column_name":  "country",
+        "data_type":  "text",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "locations",
+        "column_name":  "country_code",
+        "data_type":  "text",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "locations",
+        "column_name":  "latitude",
+        "data_type":  "double precision",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "locations",
+        "column_name":  "longitude",
+        "data_type":  "double precision",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "locations",
+        "column_name":  "status",
+        "data_type":  "text",
+        "is_nullable":  "NO",
+        "column_default":  "\u0027wishlist\u0027::text"
+    },
+    {
+        "table_name":  "locations",
+        "column_name":  "visited_at",
+        "data_type":  "date",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "locations",
+        "column_name":  "notes",
+        "data_type":  "text",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "locations",
+        "column_name":  "created_at",
+        "data_type":  "timestamp with time zone",
+        "is_nullable":  "NO",
+        "column_default":  "now()"
+    },
+    {
+        "table_name":  "locations",
+        "column_name":  "updated_at",
+        "data_type":  "timestamp with time zone",
+        "is_nullable":  "NO",
+        "column_default":  "now()"
+    },
+    {
+        "table_name":  "profiles",
+        "column_name":  "id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "profiles",
+        "column_name":  "username",
+        "data_type":  "text",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "profiles",
+        "column_name":  "full_name",
+        "data_type":  "text",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "profiles",
+        "column_name":  "avatar_path",
+        "data_type":  "text",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "profiles",
+        "column_name":  "bio",
+        "data_type":  "text",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "profiles",
+        "column_name":  "created_at",
+        "data_type":  "timestamp with time zone",
+        "is_nullable":  "NO",
+        "column_default":  "now()"
+    },
+    {
+        "table_name":  "profiles",
+        "column_name":  "updated_at",
+        "data_type":  "timestamp with time zone",
+        "is_nullable":  "NO",
+        "column_default":  "now()"
+    },
+    {
+        "table_name":  "trip_activities",
+        "column_name":  "id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  "gen_random_uuid()"
+    },
+    {
+        "table_name":  "trip_activities",
+        "column_name":  "trip_id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trip_activities",
+        "column_name":  "user_id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  "auth.uid()"
+    },
+    {
+        "table_name":  "trip_activities",
+        "column_name":  "location_id",
+        "data_type":  "uuid",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trip_activities",
+        "column_name":  "title",
+        "data_type":  "text",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trip_activities",
+        "column_name":  "description",
+        "data_type":  "text",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trip_activities",
+        "column_name":  "activity_date",
+        "data_type":  "date",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trip_activities",
+        "column_name":  "start_time",
+        "data_type":  "time without time zone",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trip_activities",
+        "column_name":  "sort_order",
+        "data_type":  "integer",
+        "is_nullable":  "NO",
+        "column_default":  "0"
+    },
+    {
+        "table_name":  "trip_activities",
+        "column_name":  "ai_generated",
+        "data_type":  "boolean",
+        "is_nullable":  "NO",
+        "column_default":  "false"
+    },
+    {
+        "table_name":  "trip_activities",
+        "column_name":  "created_at",
+        "data_type":  "timestamp with time zone",
+        "is_nullable":  "NO",
+        "column_default":  "now()"
+    },
+    {
+        "table_name":  "trip_activities",
+        "column_name":  "updated_at",
+        "data_type":  "timestamp with time zone",
+        "is_nullable":  "NO",
+        "column_default":  "now()"
+    },
+    {
+        "table_name":  "trip_locations",
+        "column_name":  "trip_id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trip_locations",
+        "column_name":  "location_id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trip_locations",
+        "column_name":  "user_id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  "auth.uid()"
+    },
+    {
+        "table_name":  "trip_locations",
+        "column_name":  "created_at",
+        "data_type":  "timestamp with time zone",
+        "is_nullable":  "NO",
+        "column_default":  "now()"
+    },
+    {
+        "table_name":  "trips",
+        "column_name":  "id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  "gen_random_uuid()"
+    },
+    {
+        "table_name":  "trips",
+        "column_name":  "user_id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trips",
+        "column_name":  "title",
+        "data_type":  "text",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trips",
+        "column_name":  "destination",
+        "data_type":  "text",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trips",
+        "column_name":  "start_date",
+        "data_type":  "date",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trips",
+        "column_name":  "end_date",
+        "data_type":  "date",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trips",
+        "column_name":  "description",
+        "data_type":  "text",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trips",
+        "column_name":  "cover_image_path",
+        "data_type":  "text",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trips",
+        "column_name":  "budget",
+        "data_type":  "numeric",
+        "is_nullable":  "NO",
+        "column_default":  "0"
+    },
+    {
+        "table_name":  "trips",
+        "column_name":  "currency",
+        "data_type":  "text",
+        "is_nullable":  "NO",
+        "column_default":  "\u0027EUR\u0027::text"
+    },
+    {
+        "table_name":  "trips",
+        "column_name":  "created_at",
+        "data_type":  "timestamp with time zone",
+        "is_nullable":  "NO",
+        "column_default":  "now()"
+    },
+    {
+        "table_name":  "trips",
+        "column_name":  "updated_at",
+        "data_type":  "timestamp with time zone",
+        "is_nullable":  "NO",
+        "column_default":  "now()"
+    },
+    {
+        "table_name":  "user_countries",
+        "column_name":  "id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  "gen_random_uuid()"
+    },
+    {
+        "table_name":  "user_countries",
+        "column_name":  "user_id",
+        "data_type":  "uuid",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "user_countries",
+        "column_name":  "country_code",
+        "data_type":  "text",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "user_countries",
+        "column_name":  "status",
+        "data_type":  "text",
+        "is_nullable":  "NO",
+        "column_default":  null
+    },
+    {
+        "table_name":  "user_countries",
+        "column_name":  "visited_at",
+        "data_type":  "date",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "user_countries",
+        "column_name":  "created_at",
+        "data_type":  "timestamp with time zone",
+        "is_nullable":  "NO",
+        "column_default":  "now()"
+    },
+    {
+        "table_name":  "user_countries",
+        "column_name":  "updated_at",
+        "data_type":  "timestamp with time zone",
+        "is_nullable":  "NO",
+        "column_default":  "now()"
+    }
+]

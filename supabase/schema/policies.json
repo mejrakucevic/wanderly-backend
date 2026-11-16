@@ -1,0 +1,290 @@
+﻿[
+    {
+        "tablename":  "profiles",
+        "policyname":  "own select",
+        "cmd":  "SELECT",
+        "roles":  "{authenticated}",
+        "qual":  "(id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "profiles",
+        "policyname":  "own insert",
+        "cmd":  "INSERT",
+        "roles":  "{authenticated}",
+        "qual":  null,
+        "with_check":  "(id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "profiles",
+        "policyname":  "own update",
+        "cmd":  "UPDATE",
+        "roles":  "{authenticated}",
+        "qual":  "(id = ( SELECT auth.uid() AS uid))",
+        "with_check":  "(id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "profiles",
+        "policyname":  "own delete",
+        "cmd":  "DELETE",
+        "roles":  "{authenticated}",
+        "qual":  "(id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "user_countries",
+        "policyname":  "own select",
+        "cmd":  "SELECT",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "user_countries",
+        "policyname":  "own insert",
+        "cmd":  "INSERT",
+        "roles":  "{authenticated}",
+        "qual":  null,
+        "with_check":  "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "user_countries",
+        "policyname":  "own update",
+        "cmd":  "UPDATE",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "user_countries",
+        "policyname":  "own delete",
+        "cmd":  "DELETE",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "locations",
+        "policyname":  "own select",
+        "cmd":  "SELECT",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "locations",
+        "policyname":  "own insert",
+        "cmd":  "INSERT",
+        "roles":  "{authenticated}",
+        "qual":  null,
+        "with_check":  "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "locations",
+        "policyname":  "own update",
+        "cmd":  "UPDATE",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "locations",
+        "policyname":  "own delete",
+        "cmd":  "DELETE",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "trips",
+        "policyname":  "own select",
+        "cmd":  "SELECT",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "trips",
+        "policyname":  "own insert",
+        "cmd":  "INSERT",
+        "roles":  "{authenticated}",
+        "qual":  null,
+        "with_check":  "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "trips",
+        "policyname":  "own update",
+        "cmd":  "UPDATE",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "trips",
+        "policyname":  "own delete",
+        "cmd":  "DELETE",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "trip_locations",
+        "policyname":  "own select",
+        "cmd":  "SELECT",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "trip_locations",
+        "policyname":  "own insert",
+        "cmd":  "INSERT",
+        "roles":  "{authenticated}",
+        "qual":  null,
+        "with_check":  "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "trip_locations",
+        "policyname":  "own update",
+        "cmd":  "UPDATE",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "trip_locations",
+        "policyname":  "own delete",
+        "cmd":  "DELETE",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "trip_activities",
+        "policyname":  "own select",
+        "cmd":  "SELECT",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "trip_activities",
+        "policyname":  "own insert",
+        "cmd":  "INSERT",
+        "roles":  "{authenticated}",
+        "qual":  null,
+        "with_check":  "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "trip_activities",
+        "policyname":  "own update",
+        "cmd":  "UPDATE",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "trip_activities",
+        "policyname":  "own delete",
+        "cmd":  "DELETE",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "expenses",
+        "policyname":  "own select",
+        "cmd":  "SELECT",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "expenses",
+        "policyname":  "own insert",
+        "cmd":  "INSERT",
+        "roles":  "{authenticated}",
+        "qual":  null,
+        "with_check":  "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "expenses",
+        "policyname":  "own update",
+        "cmd":  "UPDATE",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "expenses",
+        "policyname":  "own delete",
+        "cmd":  "DELETE",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "diary_entries",
+        "policyname":  "own select",
+        "cmd":  "SELECT",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "diary_entries",
+        "policyname":  "own insert",
+        "cmd":  "INSERT",
+        "roles":  "{authenticated}",
+        "qual":  null,
+        "with_check":  "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "diary_entries",
+        "policyname":  "own update",
+        "cmd":  "UPDATE",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "diary_entries",
+        "policyname":  "own delete",
+        "cmd":  "DELETE",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "diary_photos",
+        "policyname":  "own select",
+        "cmd":  "SELECT",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    },
+    {
+        "tablename":  "diary_photos",
+        "policyname":  "own insert",
+        "cmd":  "INSERT",
+        "roles":  "{authenticated}",
+        "qual":  null,
+        "with_check":  "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "diary_photos",
+        "policyname":  "own update",
+        "cmd":  "UPDATE",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "tablename":  "diary_photos",
+        "policyname":  "own delete",
+        "cmd":  "DELETE",
+        "roles":  "{authenticated}",
+        "qual":  "(user_id = ( SELECT auth.uid() AS uid))",
+        "with_check":  null
+    }
+]
