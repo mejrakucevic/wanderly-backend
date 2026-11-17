@@ -30,6 +30,17 @@ export const profile = z.strictObject({
   avatar_path: z.string().max(1024).nullable().optional(),
   bio: z.string().max(2000).nullable().optional(),
 }).refine((value) => Object.keys(value).length > 0, 'Provide at least one field.');
+// One row per country per user: either already visited, or on the wishlist.
+export const countryStatus = z.enum(['visited', 'wishlist']);
+export const createCountry = z.strictObject({
+  country_code: z.string().regex(/^[A-Z]{2}$/, 'Use a 2-letter ISO country code, e.g. BA.'),
+  status: countryStatus,
+  visited_at: date.nullable().optional(),
+});
+export const updateCountry = z.strictObject({
+  status: countryStatus.optional(),
+  visited_at: date.nullable().optional(),
+}).refine((value) => Object.keys(value).length > 0, 'Provide at least one field.');
 export const pagination = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   offset: z.coerce.number().int().min(0).max(100000).default(0),

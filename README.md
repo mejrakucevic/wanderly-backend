@@ -47,6 +47,10 @@ All `/api` endpoints require a bearer token. JSON success responses are direct o
 | DELETE | `/api/diary-entries/:id` | Delete owned entry |
 | GET | `/api/profile` | Own profile, or null if absent |
 | PATCH | `/api/profile` | Insert/update own profile |
+| GET | `/api/countries` | List own countries (`visited` or `wishlist`) |
+| POST | `/api/countries` | Add a country: `{ country_code: "BA", status: "visited" \| "wishlist", visited_at? }`; 409 if already listed |
+| PATCH | `/api/countries/:id` | Change status or visit date; moving to `wishlist` clears `visited_at` |
+| DELETE | `/api/countries/:id` | Remove own country |
 
 Trip creation requires title, destination, start_date, and end_date (`YYYY-MM-DD`). Optional fields: description, cover_image_path, budget, currency. Diary creation requires title and trip_id; optional fields: location_id, content, entry_date. Profile fields: username, full_name, avatar_path, bio. Payloads cannot supply ownership, IDs, or timestamps. Pagination accepts 1–100 rows and a nonnegative offset. Unknown fields, invalid IDs/dates, negative budgets, and reversed date ranges are rejected.
 

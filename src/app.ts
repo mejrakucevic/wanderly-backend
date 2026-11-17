@@ -139,6 +139,42 @@ export function createApp({ createClient, allowedOrigins = [] }: Options) {
     if (!data) throw new ApiError(404, 'Diary entry not found.');
     res.sendStatus(204);
   });
+  app.get('/api/countries', async (_req: Request, res: AuthResponse) => {
+    const { db, user } = res.locals;
+    const { data, error } = await db.from('user_countries').select('*').eq('user_id', user.id)
+      .order('created_at', { ascending: false }).order('id');
+    check(error);
+    res.json(data);
+  });
+  app.post('/api/countries', async (req: Request, res: AuthResponse) => {
+    const input = schema.createCountry.parse(req.body);
+    const { db, user } = res.locals;
+    const existing = await db.from('user_countries').select('id').eq('user_id', user.id).eq('country_code', input.country_code).maybeSingle();
+    check(existing.error);
+    if (existing.data) throw new ApiError(409, 'This country is already in your list.');
+    const visited_at = input.status === 'visited' ? input.visited_at ?? null : null;
+    const { data, error } = await db.from('user_countries').insert({ ...input, visited_at, user_id: user.id }).select().single();
+    check(error);
+    res.status(201).json(data);
+  });
+  app.patch('/api/countries/:id', async (req: Request, res: AuthResponse) => {
+    const id = schema.uuid.parse(req.params.id);
+    const input = schema.updateCountry.parse(req.body);
+    // A wishlist country has no visit date.
+    const update = input.status === 'wishlist' ? { ...input, visited_at: null } : input;
+    const { db, user } = res.locals;
+    const { data, error } = await db.from('user_countries').update(update).eq('id', id).eq('user_id', user.id).select().maybeSingle();
+    check(error);
+    if (!data) throw new ApiError(404, 'Country not found in your list.');
+    res.json(data);
+  });
+  app.delete('/api/countries/:id', async (req: Request, res: AuthResponse) => {
+    const { db, user } = res.locals;
+    const { data, error } = await db.from('user_countries').delete().eq('id', schema.uuid.parse(req.params.id)).eq('user_id', user.id).select('id').maybeSingle();
+    check(error);
+    if (!data) throw new ApiError(404, 'Country not found in your list.');
+    res.sendStatus(204);
+  });
   app.get('/api/profile', async (_req: Request, res: AuthResponse) => {
     const { db, user } = res.locals;
     const { data, error } = await db.from('profiles').select('*').eq('id', user.id).maybeSingle();
