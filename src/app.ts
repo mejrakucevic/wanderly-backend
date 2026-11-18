@@ -24,6 +24,18 @@ function check(error: PostgrestError | null) {
 function dateOrder(start: string, end: string) {
   if (end < start) throw new ApiError(400, 'The end date cannot be before the start date.');
 }
+/** Plan items must fall inside the trip; a stay's end date may not pass the trip's last day. */
+function withinTrip(trip: { start_date: string; end_date: string }, start: string, end: string | null | undefined) {
+  if (start < trip.start_date || start > trip.end_date) throw new ApiError(400, 'The date must be within the trip dates.');
+  if (end && end < start) throw new ApiError(400, 'The end date cannot be before the start date.');
+  if (end && end > trip.end_date) throw new ApiError(400, 'The end date must be within the trip dates.');
+}
+async function ownedTrip(db: Client, userId: string, id: string) {
+  const { data, error } = await db.from('trips').select('id,start_date,end_date').eq('id', id).eq('user_id', userId).maybeSingle();
+  check(error);
+  if (!data) throw new ApiError(404, 'The linked trip was not found.');
+  return data;
+}
 async function ownedReference(db: Client, userId: string, table: 'trips' | 'locations', id: string) {
   const { data, error } = await db.from(table).select('id').eq('id', id).eq('user_id', userId).maybeSingle();
   check(error);
@@ -137,6 +149,87 @@ export function createApp({ createClient, allowedOrigins = [] }: Options) {
     const { data, error } = await db.from('diary_entries').delete().eq('id', schema.uuid.parse(req.params.id)).eq('user_id', user.id).select('id').maybeSingle();
     check(error);
     if (!data) throw new ApiError(404, 'Diary entry not found.');
+    res.sendStatus(204);
+  });
+  app.get('/api/activities', async (req: Request, res: AuthResponse) => {
+    const { limit, offset } = schema.pagination.parse(req.query);
+    const { trip_id } = schema.activityList.parse(req.query);
+    const { db, user } = res.locals;
+    let query = db.from('trip_activities').select('*').eq('user_id', user.id);
+    if (trip_id) query = query.eq('trip_id', trip_id);
+    const { data, error } = await query.order('activity_date').order('start_time', { nullsFirst: true }).order('sort_order').order('id')
+      .range(offset, offset + limit - 1);
+    check(error);
+    res.json(data);
+  });
+  app.post('/api/activities', async (req: Request, res: AuthResponse) => {
+    const input = schema.createActivity.parse(req.body);
+    const { db, user } = res.locals;
+    withinTrip(await ownedTrip(db, user.id, input.trip_id), input.activity_date, input.end_date);
+    if (input.location_id) await ownedReference(db, user.id, 'locations', input.location_id);
+    // ai_generated is never accepted from clients; only a future server-side AI endpoint may set it.
+    const { data, error } = await db.from('trip_activities').insert({ ...input, user_id: user.id, ai_generated: false }).select().single();
+    check(error);
+    res.status(201).json(data);
+  });
+  app.patch('/api/activities/:id', async (req: Request, res: AuthResponse) => {
+    const id = schema.uuid.parse(req.params.id);
+    const input = schema.updateActivity.parse(req.body);
+    const { db, user } = res.locals;
+    const existing = await db.from('trip_activities').select('trip_id,activity_date,end_date').eq('id', id).eq('user_id', user.id).maybeSingle();
+    check(existing.error);
+    if (!existing.data) throw new ApiError(404, 'Plan item not found.');
+    if (input.activity_date !== undefined || input.end_date !== undefined) {
+      const trip = await ownedTrip(db, user.id, existing.data.trip_id);
+      withinTrip(trip, input.activity_date ?? existing.data.activity_date, input.end_date !== undefined ? input.end_date : existing.data.end_date);
+    }
+    if (input.location_id) await ownedReference(db, user.id, 'locations', input.location_id);
+    const { data, error } = await db.from('trip_activities').update(input).eq('id', id).eq('user_id', user.id).select().maybeSingle();
+    check(error);
+    if (!data) throw new ApiError(404, 'Plan item not found.');
+    res.json(data);
+  });
+  app.delete('/api/activities/:id', async (req: Request, res: AuthResponse) => {
+    const { db, user } = res.locals;
+    const { data, error } = await db.from('trip_activities').delete().eq('id', schema.uuid.parse(req.params.id)).eq('user_id', user.id).select('id').maybeSingle();
+    check(error);
+    if (!data) throw new ApiError(404, 'Plan item not found.');
+    res.sendStatus(204);
+  });
+  app.get('/api/countries', async (_req: Request, res: AuthResponse) => {
+    const { db, user } = res.locals;
+    const { data, error } = await db.from('user_countries').select('*').eq('user_id', user.id)
+      .order('created_at', { ascending: false }).order('id');
+    check(error);
+    res.json(data);
+  });
+  app.post('/api/countries', async (req: Request, res: AuthResponse) => {
+    const input = schema.createCountry.parse(req.body);
+    const { db, user } = res.locals;
+    const existing = await db.from('user_countries').select('id').eq('user_id', user.id).eq('country_code', input.country_code).maybeSingle();
+    check(existing.error);
+    if (existing.data) throw new ApiError(409, 'This country is already in your list.');
+    const visited_at = input.status === 'visited' ? input.visited_at ?? null : null;
+    const { data, error } = await db.from('user_countries').insert({ ...input, visited_at, user_id: user.id }).select().single();
+    check(error);
+    res.status(201).json(data);
+  });
+  app.patch('/api/countries/:id', async (req: Request, res: AuthResponse) => {
+    const id = schema.uuid.parse(req.params.id);
+    const input = schema.updateCountry.parse(req.body);
+    // A wishlist country has no visit date.
+    const update = input.status === 'wishlist' ? { ...input, visited_at: null } : input;
+    const { db, user } = res.locals;
+    const { data, error } = await db.from('user_countries').update(update).eq('id', id).eq('user_id', user.id).select().maybeSingle();
+    check(error);
+    if (!data) throw new ApiError(404, 'Country not found in your list.');
+    res.json(data);
+  });
+  app.delete('/api/countries/:id', async (req: Request, res: AuthResponse) => {
+    const { db, user } = res.locals;
+    const { data, error } = await db.from('user_countries').delete().eq('id', schema.uuid.parse(req.params.id)).eq('user_id', user.id).select('id').maybeSingle();
+    check(error);
+    if (!data) throw new ApiError(404, 'Country not found in your list.');
     res.sendStatus(204);
   });
   app.get('/api/profile', async (_req: Request, res: AuthResponse) => {

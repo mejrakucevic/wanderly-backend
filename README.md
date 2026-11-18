@@ -47,6 +47,14 @@ All `/api` endpoints require a bearer token. JSON success responses are direct o
 | DELETE | `/api/diary-entries/:id` | Delete owned entry |
 | GET | `/api/profile` | Own profile, or null if absent |
 | PATCH | `/api/profile` | Insert/update own profile |
+| GET | `/api/activities?trip_id=UUID&limit=20&offset=0` | List own trip plan items; trip filter optional |
+| POST | `/api/activities` | Add a plan item (`category`: stay, transport, activity, food, other; optional `cost`, `end_date`, `start_time` HH:MM, `icon`) to an owned trip; dates must be inside the trip |
+| PATCH | `/api/activities/:id` | Update an owned plan item |
+| DELETE | `/api/activities/:id` | Delete an owned plan item |
+| GET | `/api/countries` | List own countries (`visited` or `wishlist`) |
+| POST | `/api/countries` | Add a country: `{ country_code: "BA", status: "visited" \| "wishlist", visited_at? }`; 409 if already listed |
+| PATCH | `/api/countries/:id` | Change status or visit date; moving to `wishlist` clears `visited_at` |
+| DELETE | `/api/countries/:id` | Remove own country |
 
 Trip creation requires title, destination, start_date, and end_date (`YYYY-MM-DD`). Optional fields: description, cover_image_path, budget, currency. Diary creation requires title and trip_id; optional fields: location_id, content, entry_date. Profile fields: username, full_name, avatar_path, bio. Payloads cannot supply ownership, IDs, or timestamps. Pagination accepts 1–100 rows and a nonnegative offset. Unknown fields, invalid IDs/dates, negative budgets, and reversed date ranges are rejected.
 
@@ -69,3 +77,11 @@ See `supabase/README.md`. Types cover the nine existing tables. Generate authori
 ## Repositories
 
 This folder has its own `.git` directory, package.json, lockfile, tests and environment. It does not import frontend code or rely on the frontend's node_modules. To publish, create a separate empty GitHub repository and add its URL as this repository's `origin`. Nothing has been pushed automatically.
+
+## Database migrations
+
+New schema changes live in `supabase/migrations/` and are applied by hand in the Supabase SQL Editor (they only add to the existing tables).
+
+| File | What it does |
+|---|---|
+| `20261118_trip_activity_details.sql` | Adds `category`, `cost`, `end_date` and `icon` to `trip_activities` for the trip plan. Required by `/api/activities`. |

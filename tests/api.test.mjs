@@ -8,6 +8,7 @@ const bob = '00000000-0000-4000-8000-000000000002';
 const aliceTrip = '00000000-0000-4000-8000-000000000011';
 const bobTrip = '00000000-0000-4000-8000-000000000012';
 const bobLocation = '00000000-0000-4000-8000-000000000022';
+const bobCountry = '00000000-0000-4000-8000-000000000032';
 
 test('HTTP API validates authentication, ownership and input', async (t) => {
   const tables = {
@@ -18,6 +19,8 @@ test('HTTP API validates authentication, ownership and input', async (t) => {
     locations: [{ id: bobLocation, user_id: bob }],
     diary_entries: [],
     profiles: [{ id: alice, full_name: 'Alice' }, { id: bob, full_name: 'Bob' }],
+    trip_activities: [],
+    user_countries: [{ id: bobCountry, user_id: bob, country_code: 'IT', status: 'visited', visited_at: null }],
   };
   let nextId = 100;
   // Deliberately NO simulated RLS: the API must apply its own ownership filters.
@@ -117,6 +120,48 @@ test('HTTP API validates authentication, ownership and input', async (t) => {
       assert.equal(created.data.user_id, alice);
       assert.equal((await request(`/api/diary-entries/${created.data.id}`, { method: 'PATCH', body: { trip_id: bobTrip } })).status, 404);
       assert.equal((await request(`/api/diary-entries/${created.data.id}`, { method: 'DELETE' })).status, 204);
+    });
+    await t.test('plan items: owned trips only, dates inside the trip, no client-set AI flag', async () => {
+      const stay = { trip_id: aliceTrip, category: 'stay', title: 'Hotel Alfama', activity_date: '2027-06-01', end_date: '2027-06-04', cost: 420 };
+      const created = await request('/api/activities', { method: 'POST', body: stay });
+      assert.equal(created.status, 201);
+      assert.equal(created.data.user_id, alice);
+      assert.equal(created.data.ai_generated, false);
+      assert.equal((await request('/api/activities', { method: 'POST', body: { ...stay, trip_id: bobTrip } })).status, 404);
+      assert.equal((await request('/api/activities', { method: 'POST', body: { ...stay, ai_generated: true } })).status, 400);
+      assert.equal((await request('/api/activities', { method: 'POST', body: { ...stay, category: 'spa' } })).status, 400);
+      assert.equal((await request('/api/activities', { method: 'POST', body: { ...stay, cost: -5 } })).status, 400);
+      assert.equal((await request('/api/activities', { method: 'POST', body: { ...stay, activity_date: '2027-05-31' } })).status, 400);
+      assert.equal((await request('/api/activities', { method: 'POST', body: { ...stay, end_date: '2027-06-08' } })).status, 400);
+      assert.equal((await request('/api/activities', { method: 'POST', body: { ...stay, start_time: '25:00' } })).status, 400);
+      assert.equal((await request('/api/activities', { method: 'POST', body: { ...stay, icon: '<script>' } })).status, 400);
+      assert.equal((await request(`/api/activities/${created.data.id}`, { method: 'PATCH', body: { icon: 'apartment' } })).data.icon, 'apartment');
+      const train = await request('/api/activities', { method: 'POST', body: { trip_id: aliceTrip, category: 'transport', title: 'Train to Porto', activity_date: '2027-06-05', start_time: '09:30' } });
+      assert.equal(train.status, 201);
+      assert.deepEqual((await request(`/api/activities?trip_id=${aliceTrip}`)).data.map((row) => row.title).sort(), ['Hotel Alfama', 'Train to Porto']);
+      assert.equal((await request(`/api/activities/${created.data.id}`, { method: 'PATCH', body: { end_date: '2027-05-30' } })).status, 400);
+      assert.equal((await request(`/api/activities/${created.data.id}`, { method: 'PATCH', body: { cost: 390.5 } })).data.cost, 390.5);
+      assert.equal((await request(`/api/activities/${created.data.id}`, { method: 'PATCH', body: { trip_id: bobTrip } })).status, 400);
+      assert.equal((await request(`/api/activities/${train.data.id}`, { method: 'DELETE' })).status, 204);
+    });
+    await t.test('countries: owner-only, one row per country, wishlist has no visit date', async () => {
+      assert.deepEqual((await request('/api/countries')).data, []);
+      const added = await request('/api/countries', { method: 'POST', body: { country_code: 'BA', status: 'visited', visited_at: '2026-05-01' } });
+      assert.equal(added.status, 201);
+      assert.equal(added.data.user_id, alice);
+      assert.equal((await request('/api/countries', { method: 'POST', body: { country_code: 'BA', status: 'wishlist' } })).status, 409);
+      // Bob already has IT, but Alice can still add it.
+      assert.equal((await request('/api/countries', { method: 'POST', body: { country_code: 'IT', status: 'wishlist' } })).status, 201);
+      assert.equal((await request('/api/countries', { method: 'POST', body: { country_code: 'bosnia', status: 'visited' } })).status, 400);
+      assert.equal((await request('/api/countries', { method: 'POST', body: { country_code: 'FR', status: 'maybe' } })).status, 400);
+      assert.equal((await request('/api/countries', { method: 'POST', body: { country_code: 'FR', status: 'visited', user_id: bob } })).status, 400);
+      const moved = await request(`/api/countries/${added.data.id}`, { method: 'PATCH', body: { status: 'wishlist' } });
+      assert.equal(moved.data.status, 'wishlist');
+      assert.equal(moved.data.visited_at, null);
+      assert.equal((await request(`/api/countries/${bobCountry}`, { method: 'PATCH', body: { status: 'wishlist' } })).status, 404);
+      assert.equal((await request(`/api/countries/${bobCountry}`, { method: 'DELETE' })).status, 404);
+      assert.equal((await request(`/api/countries/${added.data.id}`, { method: 'DELETE' })).status, 204);
+      assert.equal(tables.user_countries.filter((row) => row.user_id === bob).length, 1);
     });
     await t.test('profile writes cannot choose another user’s ID', async () => {
       assert.equal((await request('/api/profile', { method: 'PATCH', body: { id: bob, full_name: 'No' } })).status, 400);

@@ -392,6 +392,34 @@
         "column_default":  "now()"
     },
     {
+        "table_name":  "trip_activities",
+        "column_name":  "category",
+        "data_type":  "text",
+        "is_nullable":  "NO",
+        "column_default":  "'activity'::text"
+    },
+    {
+        "table_name":  "trip_activities",
+        "column_name":  "cost",
+        "data_type":  "numeric",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trip_activities",
+        "column_name":  "end_date",
+        "data_type":  "date",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
+        "table_name":  "trip_activities",
+        "column_name":  "icon",
+        "data_type":  "text",
+        "is_nullable":  "YES",
+        "column_default":  null
+    },
+    {
         "table_name":  "trip_locations",
         "column_name":  "trip_id",
         "data_type":  "uuid",
