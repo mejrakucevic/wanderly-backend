@@ -30,6 +30,25 @@ export const profile = z.strictObject({
   avatar_path: z.string().max(1024).nullable().optional(),
   bio: z.string().max(2000).nullable().optional(),
 }).refine((value) => Object.keys(value).length > 0, 'Provide at least one field.');
+// Trip plan items: stays, transport, activities, food and other bookings.
+export const activityCategory = z.enum(['stay', 'transport', 'activity', 'food', 'other']);
+const activityFields = {
+  category: activityCategory,
+  title,
+  description: z.string().max(10000).nullable().optional(),
+  activity_date: date,
+  end_date: date.nullable().optional(),
+  start_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Use HH:MM, e.g. 09:30.').nullable().optional(),
+  cost: z.number().finite().nonnegative().max(10_000_000).nullable().optional(),
+  location_id: uuid.nullable().optional(),
+  sort_order: z.number().int().min(0).max(10000).optional(),
+  icon: z.string().regex(/^[a-z-]{1,40}$/).nullable().optional(),
+};
+export const createActivity = z.strictObject({ trip_id: uuid, ...activityFields });
+export const updateActivity = z.strictObject(activityFields).partial()
+  .refine((value) => Object.keys(value).length > 0, 'Provide at least one field.');
+export const activityList = z.object({ trip_id: uuid.optional() });
+
 // One row per country per user: either already visited, or on the wishlist.
 export const countryStatus = z.enum(['visited', 'wishlist']);
 export const createCountry = z.strictObject({
