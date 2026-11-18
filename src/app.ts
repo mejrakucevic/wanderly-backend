@@ -196,6 +196,41 @@ export function createApp({ createClient, allowedOrigins = [] }: Options) {
     if (!data) throw new ApiError(404, 'Plan item not found.');
     res.sendStatus(204);
   });
+  app.get('/api/expenses', async (req: Request, res: AuthResponse) => {
+    const { limit, offset } = schema.pagination.parse(req.query);
+    const { trip_id } = schema.expenseList.parse(req.query);
+    const { db, user } = res.locals;
+    let query = db.from('expenses').select('*').eq('user_id', user.id);
+    if (trip_id) query = query.eq('trip_id', trip_id);
+    const { data, error } = await query.order('expense_date', { ascending: false }).order('created_at', { ascending: false }).order('id')
+      .range(offset, offset + limit - 1);
+    check(error);
+    res.json(data);
+  });
+  app.post('/api/expenses', async (req: Request, res: AuthResponse) => {
+    const input = schema.createExpense.parse(req.body);
+    const { db, user } = res.locals;
+    await ownedTrip(db, user.id, input.trip_id);
+    const { data, error } = await db.from('expenses').insert({ ...input, user_id: user.id }).select().single();
+    check(error);
+    res.status(201).json(data);
+  });
+  app.patch('/api/expenses/:id', async (req: Request, res: AuthResponse) => {
+    const id = schema.uuid.parse(req.params.id);
+    const input = schema.updateExpense.parse(req.body);
+    const { db, user } = res.locals;
+    const { data, error } = await db.from('expenses').update(input).eq('id', id).eq('user_id', user.id).select().maybeSingle();
+    check(error);
+    if (!data) throw new ApiError(404, 'Expense not found.');
+    res.json(data);
+  });
+  app.delete('/api/expenses/:id', async (req: Request, res: AuthResponse) => {
+    const { db, user } = res.locals;
+    const { data, error } = await db.from('expenses').delete().eq('id', schema.uuid.parse(req.params.id)).eq('user_id', user.id).select('id').maybeSingle();
+    check(error);
+    if (!data) throw new ApiError(404, 'Expense not found.');
+    res.sendStatus(204);
+  });
   app.get('/api/countries', async (_req: Request, res: AuthResponse) => {
     const { db, user } = res.locals;
     const { data, error } = await db.from('user_countries').select('*').eq('user_id', user.id)

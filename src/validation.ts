@@ -49,6 +49,20 @@ export const updateActivity = z.strictObject(activityFields).partial()
   .refine((value) => Object.keys(value).length > 0, 'Provide at least one field.');
 export const activityList = z.object({ trip_id: uuid.optional() });
 
+// Trip expenses: money actually spent, in the trip's currency.
+export const expenseCategory = z.enum(['food', 'transport', 'stay', 'activities', 'shopping', 'other']);
+const expenseFields = {
+  title,
+  amount: z.number().finite().positive().max(10_000_000),
+  category: expenseCategory,
+  expense_date: date,
+};
+export const createExpense = z.strictObject({ trip_id: uuid, ...expenseFields });
+// The trip can't change after creation; move an expense by deleting and re-adding it.
+export const updateExpense = z.strictObject(expenseFields).partial()
+  .refine((value) => Object.keys(value).length > 0, 'Provide at least one field.');
+export const expenseList = z.object({ trip_id: uuid.optional() });
+
 // One row per country per user: either already visited, or on the wishlist.
 export const countryStatus = z.enum(['visited', 'wishlist']);
 export const createCountry = z.strictObject({

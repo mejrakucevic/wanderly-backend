@@ -51,6 +51,10 @@ All `/api` endpoints require a bearer token. JSON success responses are direct o
 | POST | `/api/activities` | Add a plan item (`category`: stay, transport, activity, food, other; optional `cost`, `end_date`, `start_time` HH:MM, `icon`) to an owned trip; dates must be inside the trip |
 | PATCH | `/api/activities/:id` | Update an owned plan item |
 | DELETE | `/api/activities/:id` | Delete an owned plan item |
+| GET | `/api/expenses?trip_id=UUID&limit=20&offset=0` | List own expenses, newest first; trip filter optional |
+| POST | `/api/expenses` | Add an expense (`title`, `amount` > 0, `category`: food, transport, stay, activities, shopping, other, `expense_date`) to an owned trip |
+| PATCH | `/api/expenses/:id` | Update an owned expense (the trip cannot change) |
+| DELETE | `/api/expenses/:id` | Delete an owned expense |
 | GET | `/api/countries` | List own countries (`visited` or `wishlist`) |
 | POST | `/api/countries` | Add a country: `{ country_code: "BA", status: "visited" \| "wishlist", visited_at? }`; 409 if already listed |
 | PATCH | `/api/countries/:id` | Change status or visit date; moving to `wishlist` clears `visited_at` |

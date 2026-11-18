@@ -9,6 +9,7 @@ const aliceTrip = '00000000-0000-4000-8000-000000000011';
 const bobTrip = '00000000-0000-4000-8000-000000000012';
 const bobLocation = '00000000-0000-4000-8000-000000000022';
 const bobCountry = '00000000-0000-4000-8000-000000000032';
+const bobExpense = '00000000-0000-4000-8000-000000000042';
 
 test('HTTP API validates authentication, ownership and input', async (t) => {
   const tables = {
@@ -20,6 +21,7 @@ test('HTTP API validates authentication, ownership and input', async (t) => {
     diary_entries: [],
     profiles: [{ id: alice, full_name: 'Alice' }, { id: bob, full_name: 'Bob' }],
     trip_activities: [],
+    expenses: [{ id: bobExpense, trip_id: bobTrip, user_id: bob, title: 'Bob dinner', amount: 30, category: 'food', expense_date: '2027-06-02' }],
     user_countries: [{ id: bobCountry, user_id: bob, country_code: 'IT', status: 'visited', visited_at: null }],
   };
   let nextId = 100;
@@ -143,6 +145,24 @@ test('HTTP API validates authentication, ownership and input', async (t) => {
       assert.equal((await request(`/api/activities/${created.data.id}`, { method: 'PATCH', body: { cost: 390.5 } })).data.cost, 390.5);
       assert.equal((await request(`/api/activities/${created.data.id}`, { method: 'PATCH', body: { trip_id: bobTrip } })).status, 400);
       assert.equal((await request(`/api/activities/${train.data.id}`, { method: 'DELETE' })).status, 204);
+    });
+    await t.test('expenses: owned trips only, positive amounts, known categories', async () => {
+      const lunch = { trip_id: aliceTrip, title: 'Lunch', amount: 18.5, category: 'food', expense_date: '2027-06-02' };
+      const created = await request('/api/expenses', { method: 'POST', body: lunch });
+      assert.equal(created.status, 201);
+      assert.equal(created.data.user_id, alice);
+      assert.equal((await request('/api/expenses', { method: 'POST', body: { ...lunch, trip_id: bobTrip } })).status, 404);
+      assert.equal((await request('/api/expenses', { method: 'POST', body: { ...lunch, amount: 0 } })).status, 400);
+      assert.equal((await request('/api/expenses', { method: 'POST', body: { ...lunch, amount: -3 } })).status, 400);
+      assert.equal((await request('/api/expenses', { method: 'POST', body: { ...lunch, category: 'casino' } })).status, 400);
+      assert.equal((await request('/api/expenses', { method: 'POST', body: { ...lunch, user_id: bob } })).status, 400);
+      assert.deepEqual((await request('/api/expenses')).data.map((row) => row.title), ['Lunch']);
+      assert.equal((await request(`/api/expenses/${created.data.id}`, { method: 'PATCH', body: { amount: 21 } })).data.amount, 21);
+      assert.equal((await request(`/api/expenses/${created.data.id}`, { method: 'PATCH', body: { trip_id: bobTrip } })).status, 400);
+      assert.equal((await request(`/api/expenses/${bobExpense}`, { method: 'PATCH', body: { amount: 1 } })).status, 404);
+      assert.equal((await request(`/api/expenses/${bobExpense}`, { method: 'DELETE' })).status, 404);
+      assert.equal((await request(`/api/expenses/${created.data.id}`, { method: 'DELETE' })).status, 204);
+      assert.equal(tables.expenses.find((row) => row.id === bobExpense).amount, 30);
     });
     await t.test('countries: owner-only, one row per country, wishlist has no visit date', async () => {
       assert.deepEqual((await request('/api/countries')).data, []);
