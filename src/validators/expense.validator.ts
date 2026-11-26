@@ -5,7 +5,7 @@ import { date, NOT_EMPTY_MESSAGE, notEmpty, title, uuid } from './common.validat
 const expenseFields = {
   title,
   amount: z.number().finite().positive().max(10_000_000),
-  category: z.enum(['food', 'transport', 'stay', 'activities', 'shopping', 'other']),
+  category: z.enum(['accommodation', 'transport', 'food', 'activities', 'other']),
   expense_date: date,
 };
 export const createExpense = z.strictObject({ trip_id: uuid, ...expenseFields });

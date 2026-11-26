@@ -202,6 +202,10 @@ test('HTTP API validates authentication, ownership and input', async (t) => {
       assert.equal((await request('/api/expenses', { method: 'POST', body: { ...lunch, amount: 0 } })).status, 400);
       assert.equal((await request('/api/expenses', { method: 'POST', body: { ...lunch, amount: -3 } })).status, 400);
       assert.equal((await request('/api/expenses', { method: 'POST', body: { ...lunch, category: 'casino' } })).status, 400);
+      assert.equal((await request('/api/expenses', { method: 'POST', body: { ...lunch, category: 'shopping' } })).status, 400);
+      const stay = await request('/api/expenses', { method: 'POST', body: { ...lunch, title: 'Hostel', category: 'accommodation' } });
+      assert.equal(stay.status, 201);
+      assert.equal((await request(`/api/expenses/${stay.data.id}`, { method: 'DELETE' })).status, 204);
       assert.equal((await request('/api/expenses', { method: 'POST', body: { ...lunch, user_id: bob } })).status, 400);
       assert.deepEqual((await request('/api/expenses')).data.map((row) => row.title), ['Lunch']);
       assert.equal((await request(`/api/expenses/${created.data.id}`, { method: 'PATCH', body: { amount: 21 } })).data.amount, 21);
@@ -232,6 +236,7 @@ test('HTTP API validates authentication, ownership and input', async (t) => {
     });
     await t.test('profile writes cannot choose another user’s ID', async () => {
       assert.equal((await request('/api/profile', { method: 'PATCH', body: { id: bob, full_name: 'No' } })).status, 400);
+      assert.equal((await request('/api/profile', { method: 'PATCH', body: { username: 'no spaces' } })).status, 400);
       const updated = await request('/api/profile', { method: 'PATCH', body: { full_name: 'Alice Updated' } });
       assert.equal(updated.data.id, alice);
       assert.equal(tables.profiles.find((row) => row.id === bob).full_name, 'Bob');

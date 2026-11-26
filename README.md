@@ -76,7 +76,7 @@ Except for `/api/auth/register` and `/api/auth/login`, all `/api` endpoints requ
 | DELETE | `/api/activities/:id` | Delete an owned plan item |
 | GET | `/api/expenses?trip_id=UUID&limit=20&offset=0` | List own expenses, newest first; trip filter optional |
 | GET | `/api/expenses/:id` | Get owned expense |
-| POST | `/api/expenses` | Add an expense (`title`, `amount` > 0, `category`: food, transport, stay, activities, shopping, other, `expense_date`) to an owned trip |
+| POST | `/api/expenses` | Add an expense (`title`, `amount` > 0, `category`: accommodation, transport, food, activities, other, `expense_date`) to an owned trip |
 | PATCH | `/api/expenses/:id` | Update an owned expense (the trip cannot change) |
 | DELETE | `/api/expenses/:id` | Delete an owned expense |
 | GET | `/api/countries` | List own countries (`visited` or `wishlist`) |
@@ -106,6 +106,10 @@ See `supabase/README.md`. Types cover the nine existing tables. Generate authori
 ## Repositories
 
 This folder has its own `.git` directory, package.json, lockfile, tests and environment. It does not import frontend code or rely on the frontend's node_modules. To publish, create a separate empty GitHub repository and add its URL as this repository's `origin`. Nothing has been pushed automatically.
+
+## Postman
+
+Import `postman/wanderly-api.postman_collection.json`. Use a separate test account: set the `email` and `password` collection variables (do not commit real values), start the API, and run the folders in order. Login saves the token, and folder 10 deletes the test data.
 
 ## Database migrations
 
