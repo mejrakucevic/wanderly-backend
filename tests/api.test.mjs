@@ -8,6 +8,10 @@ const bob = '00000000-0000-4000-8000-000000000002';
 const aliceTrip = '00000000-0000-4000-8000-000000000011';
 const bobTrip = '00000000-0000-4000-8000-000000000012';
 const bobLocation = '00000000-0000-4000-8000-000000000022';
+const bobCountry = '00000000-0000-4000-8000-000000000032';
+const bobExpense = '00000000-0000-4000-8000-000000000042';
+const bobEntry = '00000000-0000-4000-8000-000000000052';
+const bobActivity = '00000000-0000-4000-8000-000000000062';
 
 test('HTTP API validates authentication, ownership and input', async (t) => {
   const tables = {
@@ -16,16 +20,30 @@ test('HTTP API validates authentication, ownership and input', async (t) => {
       { id: bobTrip, user_id: bob, title: 'Vienna', start_date: '2027-06-01', end_date: '2027-06-07' },
     ],
     locations: [{ id: bobLocation, user_id: bob }],
-    diary_entries: [],
+    diary_entries: [{ id: bobEntry, trip_id: bobTrip, user_id: bob, title: 'Bob day', entry_date: '2027-06-02' }],
     profiles: [{ id: alice, full_name: 'Alice' }, { id: bob, full_name: 'Bob' }],
+    trip_activities: [{ id: bobActivity, trip_id: bobTrip, user_id: bob, category: 'stay', title: 'Bob hotel', activity_date: '2027-06-01' }],
+    expenses: [{ id: bobExpense, trip_id: bobTrip, user_id: bob, title: 'Bob dinner', amount: 30, category: 'food', expense_date: '2027-06-02' }],
+    user_countries: [{ id: bobCountry, user_id: bob, country_code: 'IT', status: 'visited', visited_at: null }],
   };
   let nextId = 100;
+  const signedOut = [];
+  const session = { access_token: 'access', refresh_token: 'refresh', token_type: 'bearer', expires_at: 2000000000, provider_token: 'must-not-leak' };
   // Deliberately NO simulated RLS: the API must apply its own ownership filters.
   function client(token) {
     return {
-      auth: { getUser: async () => token === 'valid-alice'
-        ? { data: { user: { id: alice, email: 'alice@example.com' } }, error: null }
-        : { data: { user: null }, error: { status: token === 'auth-down' ? 503 : 401 } } },
+      auth: {
+        getUser: async () => token === 'valid-alice'
+          ? { data: { user: { id: alice, email: 'alice@example.com' } }, error: null }
+          : { data: { user: null }, error: { status: token === 'auth-down' ? 503 : 401 } },
+        signUp: async ({ email }) => email === 'alice@example.com'
+          ? { data: { user: null, session: null }, error: { status: 422, code: 'user_already_exists' } }
+          : { data: { user: { id: bob, email, identities: [] }, session }, error: null },
+        signInWithPassword: async ({ email, password }) => email === 'alice@example.com' && password === 'correct-password'
+          ? { data: { user: { id: alice, email, aud: 'authenticated' }, session }, error: null }
+          : { data: { user: null, session: null }, error: { status: 400, code: 'invalid_credentials' } },
+        admin: { signOut: async (jwt, scope) => { signedOut.push({ jwt, scope }); return { data: null, error: null }; } },
+      },
       from(table) {
         const filters = [];
         let operation = 'select';
@@ -75,6 +93,40 @@ test('HTTP API validates authentication, ownership and input', async (t) => {
     await t.test('health works without authentication', async () => {
       assert.equal((await request('/health', { token: null })).status, 200);
     });
+    await t.test('auth: register, login and logout return safe JSON and correct statuses', async () => {
+      const registered = await request('/api/auth/register', { token: null, method: 'POST', body: { email: 'NEW@example.com ', password: 'long-enough' } });
+      assert.equal(registered.status, 201);
+      assert.deepEqual(registered.data.user, { id: bob, email: 'new@example.com' });
+      assert.equal(registered.data.session.provider_token, undefined);
+      assert.equal((await request('/api/auth/register', { token: null, method: 'POST', body: { email: 'alice@example.com', password: 'long-enough' } })).status, 409);
+      assert.equal((await request('/api/auth/register', { token: null, method: 'POST', body: { email: 'not-an-email', password: 'long-enough' } })).status, 400);
+      assert.equal((await request('/api/auth/register', { token: null, method: 'POST', body: { email: 'x@example.com', password: 'short' } })).status, 400);
+      assert.equal((await request('/api/auth/login', { token: null, method: 'POST', body: { email: 'alice@example.com', password: 'wrong' } })).status, 401);
+      const loggedIn = await request('/api/auth/login', { token: null, method: 'POST', body: { email: 'alice@example.com', password: 'correct-password' } });
+      assert.equal(loggedIn.status, 200);
+      assert.equal(loggedIn.data.session.access_token, 'access');
+      assert.deepEqual(Object.keys(loggedIn.data.user).sort(), ['email', 'id']);
+      assert.equal((await request('/api/auth/logout', { token: null, method: 'POST' })).status, 401);
+      assert.equal((await request('/api/auth/logout', { method: 'POST' })).status, 204);
+      assert.deepEqual(signedOut, [{ jwt: 'valid-alice', scope: 'local' }]);
+    });
+    await t.test('single-record reads return only the owner\u2019s records', async () => {
+      for (const [path, id] of [['diary-entries', bobEntry], ['activities', bobActivity], ['expenses', bobExpense], ['countries', bobCountry]]) {
+        assert.equal((await request(`/api/${path}/${id}`)).status, 404, path);
+        assert.equal((await request(`/api/${path}/not-a-uuid`)).status, 400, path);
+      }
+      const entry = await request('/api/diary-entries', { method: 'POST', body: { title: 'Mine', trip_id: aliceTrip } });
+      assert.equal((await request(`/api/diary-entries/${entry.data.id}`)).data.title, 'Mine');
+      const expense = await request('/api/expenses', { method: 'POST', body: { trip_id: aliceTrip, title: 'Tea', amount: 3, category: 'food', expense_date: '2027-06-02' } });
+      assert.equal((await request(`/api/expenses/${expense.data.id}`)).data.title, 'Tea');
+      const activity = await request('/api/activities', { method: 'POST', body: { trip_id: aliceTrip, category: 'food', title: 'Dinner', activity_date: '2027-06-02' } });
+      assert.equal((await request(`/api/activities/${activity.data.id}`)).data.title, 'Dinner');
+      const country = await request('/api/countries', { method: 'POST', body: { country_code: 'ES', status: 'wishlist' } });
+      assert.equal((await request(`/api/countries/${country.data.id}`)).data.country_code, 'ES');
+      for (const [path, id] of [['diary-entries', entry.data.id], ['expenses', expense.data.id], ['activities', activity.data.id], ['countries', country.data.id]]) {
+        assert.equal((await request(`/api/${path}/${id}`, { method: 'DELETE' })).status, 204);
+      }
+    });
     await t.test('missing and invalid tokens are rejected; outages remain distinguishable', async () => {
       assert.equal((await request('/api/trips', { token: null })).status, 401);
       assert.equal((await request('/api/trips', { token: 'invalid' })).status, 401);
@@ -118,8 +170,73 @@ test('HTTP API validates authentication, ownership and input', async (t) => {
       assert.equal((await request(`/api/diary-entries/${created.data.id}`, { method: 'PATCH', body: { trip_id: bobTrip } })).status, 404);
       assert.equal((await request(`/api/diary-entries/${created.data.id}`, { method: 'DELETE' })).status, 204);
     });
+    await t.test('plan items: owned trips only, dates inside the trip, no client-set AI flag', async () => {
+      const stay = { trip_id: aliceTrip, category: 'stay', title: 'Hotel Alfama', activity_date: '2027-06-01', end_date: '2027-06-04', cost: 420 };
+      const created = await request('/api/activities', { method: 'POST', body: stay });
+      assert.equal(created.status, 201);
+      assert.equal(created.data.user_id, alice);
+      assert.equal(created.data.ai_generated, false);
+      assert.equal((await request('/api/activities', { method: 'POST', body: { ...stay, trip_id: bobTrip } })).status, 404);
+      assert.equal((await request('/api/activities', { method: 'POST', body: { ...stay, ai_generated: true } })).status, 400);
+      assert.equal((await request('/api/activities', { method: 'POST', body: { ...stay, category: 'spa' } })).status, 400);
+      assert.equal((await request('/api/activities', { method: 'POST', body: { ...stay, cost: -5 } })).status, 400);
+      assert.equal((await request('/api/activities', { method: 'POST', body: { ...stay, activity_date: '2027-05-31' } })).status, 400);
+      assert.equal((await request('/api/activities', { method: 'POST', body: { ...stay, end_date: '2027-06-08' } })).status, 400);
+      assert.equal((await request('/api/activities', { method: 'POST', body: { ...stay, start_time: '25:00' } })).status, 400);
+      assert.equal((await request('/api/activities', { method: 'POST', body: { ...stay, icon: '<script>' } })).status, 400);
+      assert.equal((await request(`/api/activities/${created.data.id}`, { method: 'PATCH', body: { icon: 'apartment' } })).data.icon, 'apartment');
+      const train = await request('/api/activities', { method: 'POST', body: { trip_id: aliceTrip, category: 'transport', title: 'Train to Porto', activity_date: '2027-06-05', start_time: '09:30' } });
+      assert.equal(train.status, 201);
+      assert.deepEqual((await request(`/api/activities?trip_id=${aliceTrip}`)).data.map((row) => row.title).sort(), ['Hotel Alfama', 'Train to Porto']);
+      assert.equal((await request(`/api/activities/${created.data.id}`, { method: 'PATCH', body: { end_date: '2027-05-30' } })).status, 400);
+      assert.equal((await request(`/api/activities/${created.data.id}`, { method: 'PATCH', body: { cost: 390.5 } })).data.cost, 390.5);
+      assert.equal((await request(`/api/activities/${created.data.id}`, { method: 'PATCH', body: { trip_id: bobTrip } })).status, 400);
+      assert.equal((await request(`/api/activities/${train.data.id}`, { method: 'DELETE' })).status, 204);
+    });
+    await t.test('expenses: owned trips only, positive amounts, known categories', async () => {
+      const lunch = { trip_id: aliceTrip, title: 'Lunch', amount: 18.5, category: 'food', expense_date: '2027-06-02' };
+      const created = await request('/api/expenses', { method: 'POST', body: lunch });
+      assert.equal(created.status, 201);
+      assert.equal(created.data.user_id, alice);
+      assert.equal((await request('/api/expenses', { method: 'POST', body: { ...lunch, trip_id: bobTrip } })).status, 404);
+      assert.equal((await request('/api/expenses', { method: 'POST', body: { ...lunch, amount: 0 } })).status, 400);
+      assert.equal((await request('/api/expenses', { method: 'POST', body: { ...lunch, amount: -3 } })).status, 400);
+      assert.equal((await request('/api/expenses', { method: 'POST', body: { ...lunch, category: 'casino' } })).status, 400);
+      assert.equal((await request('/api/expenses', { method: 'POST', body: { ...lunch, category: 'shopping' } })).status, 400);
+      const stay = await request('/api/expenses', { method: 'POST', body: { ...lunch, title: 'Hostel', category: 'accommodation' } });
+      assert.equal(stay.status, 201);
+      assert.equal((await request(`/api/expenses/${stay.data.id}`, { method: 'DELETE' })).status, 204);
+      assert.equal((await request('/api/expenses', { method: 'POST', body: { ...lunch, user_id: bob } })).status, 400);
+      assert.deepEqual((await request('/api/expenses')).data.map((row) => row.title), ['Lunch']);
+      assert.equal((await request(`/api/expenses/${created.data.id}`, { method: 'PATCH', body: { amount: 21 } })).data.amount, 21);
+      assert.equal((await request(`/api/expenses/${created.data.id}`, { method: 'PATCH', body: { trip_id: bobTrip } })).status, 400);
+      assert.equal((await request(`/api/expenses/${bobExpense}`, { method: 'PATCH', body: { amount: 1 } })).status, 404);
+      assert.equal((await request(`/api/expenses/${bobExpense}`, { method: 'DELETE' })).status, 404);
+      assert.equal((await request(`/api/expenses/${created.data.id}`, { method: 'DELETE' })).status, 204);
+      assert.equal(tables.expenses.find((row) => row.id === bobExpense).amount, 30);
+    });
+    await t.test('countries: owner-only, one row per country, wishlist has no visit date', async () => {
+      assert.deepEqual((await request('/api/countries')).data, []);
+      const added = await request('/api/countries', { method: 'POST', body: { country_code: 'BA', status: 'visited', visited_at: '2026-05-01' } });
+      assert.equal(added.status, 201);
+      assert.equal(added.data.user_id, alice);
+      assert.equal((await request('/api/countries', { method: 'POST', body: { country_code: 'BA', status: 'wishlist' } })).status, 409);
+      // Bob already has IT, but Alice can still add it.
+      assert.equal((await request('/api/countries', { method: 'POST', body: { country_code: 'IT', status: 'wishlist' } })).status, 201);
+      assert.equal((await request('/api/countries', { method: 'POST', body: { country_code: 'bosnia', status: 'visited' } })).status, 400);
+      assert.equal((await request('/api/countries', { method: 'POST', body: { country_code: 'FR', status: 'maybe' } })).status, 400);
+      assert.equal((await request('/api/countries', { method: 'POST', body: { country_code: 'FR', status: 'visited', user_id: bob } })).status, 400);
+      const moved = await request(`/api/countries/${added.data.id}`, { method: 'PATCH', body: { status: 'wishlist' } });
+      assert.equal(moved.data.status, 'wishlist');
+      assert.equal(moved.data.visited_at, null);
+      assert.equal((await request(`/api/countries/${bobCountry}`, { method: 'PATCH', body: { status: 'wishlist' } })).status, 404);
+      assert.equal((await request(`/api/countries/${bobCountry}`, { method: 'DELETE' })).status, 404);
+      assert.equal((await request(`/api/countries/${added.data.id}`, { method: 'DELETE' })).status, 204);
+      assert.equal(tables.user_countries.filter((row) => row.user_id === bob).length, 1);
+    });
     await t.test('profile writes cannot choose another user’s ID', async () => {
       assert.equal((await request('/api/profile', { method: 'PATCH', body: { id: bob, full_name: 'No' } })).status, 400);
+      assert.equal((await request('/api/profile', { method: 'PATCH', body: { username: 'no spaces' } })).status, 400);
       const updated = await request('/api/profile', { method: 'PATCH', body: { full_name: 'Alice Updated' } });
       assert.equal(updated.data.id, alice);
       assert.equal(tables.profiles.find((row) => row.id === bob).full_name, 'Bob');
