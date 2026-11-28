@@ -93,6 +93,17 @@ test('HTTP API validates authentication, ownership and input', async (t) => {
     await t.test('health works without authentication', async () => {
       assert.equal((await request('/health', { token: null })).status, 200);
     });
+    await t.test('Swagger UI is served and documents every route', async () => {
+      const page = await fetch(`${base}/api-docs/`);
+      assert.equal(page.status, 200);
+      assert.match(await page.text(), /swagger-ui/);
+      const { openApiDocument } = await import('../dist/docs/openapi.js');
+      const operations = Object.values(openApiDocument.paths).flatMap((item) => Object.keys(item).filter((key) => key !== 'parameters'));
+      assert.equal(operations.length, 32); // 31 API routes + /health
+      const tripBody = openApiDocument.paths['/api/trips'].post.requestBody.content['application/json'].schema;
+      assert.deepEqual(tripBody.required.sort(), ['destination', 'end_date', 'start_date', 'title']);
+      assert.equal(tripBody.additionalProperties, false);
+    });
     await t.test('auth: register, login and logout return safe JSON and correct statuses', async () => {
       const registered = await request('/api/auth/register', { token: null, method: 'POST', body: { email: 'NEW@example.com ', password: 'long-enough' } });
       assert.equal(registered.status, 201);

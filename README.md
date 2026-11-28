@@ -15,6 +15,7 @@ src/
   services/       Business logic and Supabase queries
   validators/     Zod schemas for request data
   utils/          Shared API and database error helpers
+  docs/           OpenAPI description for Swagger UI
   types/          TypeScript types
 ```
 
@@ -106,6 +107,10 @@ See `supabase/README.md`. Types cover the nine existing tables. Generate authori
 ## Repositories
 
 This folder has its own `.git` directory, package.json, lockfile, tests and environment. It does not import frontend code or rely on the frontend's node_modules. To publish, create a separate empty GitHub repository and add its URL as this repository's `origin`. Nothing has been pushed automatically.
+
+## Swagger
+
+Start the API and open `http://localhost:3000/api-docs`. Run **Auth → Login** with a test account, copy `session.access_token`, click **Authorize**, paste the token, then use **Try it out** on any route. Request bodies are generated from the Zod validators.
 
 ## Postman
 
